@@ -94,6 +94,6 @@ Open the chatbot (via `bin/chat` or `rails c`) and attempt to execute these thre
 ## 🔍 Code Walkthrough
 
 The chatbot's logic is defined in a standard Rails service object pattern:
-- **Service Class**: [app/services/chatbots/naive_car_assistant.rb](file:///wsl.localhost/Ubuntu/home/roriz/projects/mba-on-rails-llm-sec/class-1/naive-prompt/app/services/chatbots/naive_car_assistant.rb)
+- **Service Class**: [app/services/chatbots/naive_car_assistant.rb](./app/services/chatbots/naive_car_assistant.rb)
   - This file contains the raw `SYSTEM_PROMPT` containing our hardened constraints and the `CONTEXT` data block.
   - Review this file to understand exactly what you are fighting against!

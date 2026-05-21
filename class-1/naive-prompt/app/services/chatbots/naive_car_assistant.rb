@@ -31,17 +31,17 @@ module Chatbots
     end
 
     def reset_chat!
-      @history = [
-        { role: 'user', parts: [{ text: "SYSTEM INSTRUCTIONS:\n#{SYSTEM_PROMPT}\n\nCONTEXT:\n#{CONTEXT}" }] },
-        { role: 'model', parts: [{ text: "Understood. I will act strictly as Watsonville Chevrolet's car inventory assistant according to your rules. How can I help you today?" }] }
-      ]
+      @history = []
     end
 
     def chat(message)
       @history << { role: 'user', parts: [{ text: message }] }
       response = @client.models.generate_content(
         model: 'gemini-2.5-flash',
-        contents: @history
+        contents: @history,
+        config: {
+          system_instruction: "SYSTEM INSTRUCTIONS:\n#{SYSTEM_PROMPT}\n\nCONTEXT:\n#{CONTEXT}"
+        }
       )
       
       model_text = response.text
