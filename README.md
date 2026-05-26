@@ -1,10 +1,10 @@
-# MBA on Rails: LLM Security & Liability 🔒🚗
+# MBA on Rails: LLM Security & Liability
 
 Welcome to the hands-on laboratory exercises repository for **MBA on Rails: LLM Security & Liability**. This codebase is designed to teach modern LLM security paradigms, security-first patterns, and common vulnerability mitigation methods (such as Prompt Injection and Guardrail systems) in a pure-Ruby environment without complex external dependencies.
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 This repository is split into progressively designed modules:
 
@@ -16,7 +16,7 @@ This repository is split into progressively designed modules:
 
 ---
 
-## 🛠️ Configuration & Setup
+## Configuration & Setup
 
 ### 1. Set Up Environment Variables
 Create a `.env` file at the **root of the repository**:
@@ -41,7 +41,7 @@ ruby 1-prompt_injection/reflection/chat --safe
 
 ---
 
-## 🐳 Running with Docker (Recommended)
+## Running with Docker (Recommended)
 
 To guarantee a clean environment with the correct Ruby version and absolute isolation, a production-grade developer container configuration is provided:
 
@@ -66,7 +66,7 @@ ruby 1-prompt_injection/reflection/chat --safe
 
 ---
 
-## 👿 Exploration: The Chris Bakke Tahoe Exploit ($1 Deal)
+## Exploration: The Chris Bakke Tahoe Exploit ($1 Deal)
 
 To explore the prompt injection safety behaviors:
 
