@@ -34,13 +34,14 @@ def load_env(file_path)
   end
 end
 
+# Load .env file looking up the tree
 [
   File.expand_path('../.env', __dir__),
   File.expand_path('../../.env', __dir__),
   File.expand_path('../../../.env', __dir__)
 ].uniq.each { |path| load_env(path) }
 
-require_relative 'lib/naive_car_assistant'
+require_relative 'lib/presidio_assistant'
 
 # Ensure API key is set
 if ENV['GEMINI_API_KEY'].nil? || ENV['GEMINI_API_KEY'].empty?
@@ -53,8 +54,8 @@ end
 safe_mode = ARGV.include?('--safe')
 
 puts "\n#{'=' * 60}"
-title = safe_mode ? ' 🚗 WATSONVILLE CHEVROLET INVENTORY ASSISTANT (SAFE) 🚗 ' : ' 🚗 WATSONVILLE CHEVROLET INVENTORY ASSISTANT (NAIVE) 🚗 '
-puts title.center(60).colorize(safe_mode ? :light_blue : :light_green).swap
+title = safe_mode ? ' 🛡️ PRESIDIO PII INTERCEPTOR (SAFE MODE) 🛡️ ' : ' ⚠️ PRESIDIO PII INTERCEPTOR (NAIVE MODE) ⚠️ '
+puts title.center(60).colorize(safe_mode ? :light_blue : :light_red).swap
 puts '=' * 60
 puts 'Type '.colorize(:light_black) + '/reset'.colorize(:cyan) + ' to clear chat history.'.colorize(:light_black)
 puts 'Type '.colorize(:light_black) + '/history'.colorize(:magenta) + ' to see the full raw prompt payload.'.colorize(:light_black)
@@ -62,8 +63,8 @@ puts 'Type '.colorize(:light_black) + '/exit'.colorize(:red) + ' to quit the cha
 puts "#{'=' * 60}\n"
 
 begin
-  assistant = Chatbots::NaiveCarAssistant.new(safe: safe_mode)
-  puts "#{'Bot: '.colorize(:green)}Hello! I am Watsonville Chevrolet's inventory assistant. How can I help you today?"
+  assistant = Chatbots::PresidioAssistant.new(safe: safe_mode)
+  puts "#{'Bot: '.colorize(:green)}Hello! I am your Enterprise Assistant. How can I help you today?"
 
   loop do
     print "\nYou: ".colorize(:blue)
@@ -80,7 +81,7 @@ begin
     when '/reset'
       assistant.reset!
       puts "\n[System] Chat history reset.".colorize(:cyan)
-      puts "#{'Bot: '.colorize(:green)}Hello! I am Watsonville Chevrolet's inventory assistant. How can I help you today?"
+      puts "#{'Bot: '.colorize(:green)}Hello! I am your Enterprise Assistant. How can I help you today?"
     when '/history'
       puts "\n#{'-' * 60}"
       puts ' RAW CHAT HISTORY (PAYLOAD SENT TO GEMINI) '.center(60).colorize(:magenta).swap
@@ -97,11 +98,24 @@ begin
       # Clear the "thinking" message
       print "\r#{' ' * 30}\r"
 
+      # Print Diagnostic Logs in Safe Mode
+      if safe_mode && assistant.diagnostic_log.any?
+        puts "\n#{'═' * 60}"
+        puts ' 🔍 INTERCEPTOR PIPELINE DIAGNOSTIC TRACE 🔍 '.center(60).colorize(:cyan).swap
+        puts '═' * 60
+        assistant.diagnostic_log.each do |log|
+          puts "▶ #{log[:phase].colorize(:light_yellow).bold}"
+          puts log[:details].colorize(:white)
+          puts '─' * 60
+        end
+        puts "\n"
+      end
+
       # Colorize errors in red
       if response.start_with?('Error:')
         puts 'Bot: '.colorize(:green) + response.colorize(:red)
       else
-        puts 'Bot: '.colorize(:green) + response
+        puts 'Bot: '.colorize(:green) + response.colorize(:light_green)
       end
     end
   end

@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Exit on error
+set -e
+
+# Resolve the root directory of the repository
+ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+cd "$ROOT_DIR"
+
+# Term colors
+GREEN="\033[0;32m"
+YELLOW="\033[1;33m"
+RED="\033[0;31m"
+BLUE="\033[0;34m"
+NC="\033[0m" # No Color
+
+echo -e "${BLUE}============================================================${NC}"
+echo -e "${BLUE}       🐳 LLM SECURITY & LIABILITY DOCKER LAB 🐳            ${NC}"
+echo -e "${BLUE}============================================================${NC}"
+
+# 1. Verify that .env file exists
+if [ ! -f .env ]; then
+    echo -e "${YELLOW}[!] WARNING: .env file not found at root.${NC}"
+    echo -e "Creating a template .env file. Please edit it with your GEMINI_API_KEY."
+    echo "GEMINI_API_KEY=your_actual_gemini_api_key_here" > .env
+    echo -e "${GREEN}[✔] Created .env template. Please check and configure it.${NC}"
+fi
+
+# 2. Build the Docker image
+echo -e "\n${BLUE}[1/2] Building Docker Image (llm-sec-lab)...${NC}"
+docker build -t llm-sec-lab .
+
+# 3. Run the container interactively
+echo -e "\n${GREEN}[2/2] Launching interactive container...${NC}"
+echo -e "${YELLOW}Mounting current workspace to /app for live local updates.${NC}"
+echo -e "Once inside the container shell, you can run:"
+echo -e "  * ${GREEN}ruby 2-poisoning/presidio_demo/chat --safe${NC} (PII Interceptor)"
+echo -e "  * ${GREEN}./2-poisoning/presidio_demo/run_irb_demo.sh${NC} (Interactive IRB Presidio Demo)"
+echo -e "  * ${GREEN}ruby 1-prompt_injection/reflection/chat --safe${NC} (Self-Reflection Lab)"
+echo -e "${BLUE}============================================================${NC}\n"
+
+docker run -it \
+  --rm \
+  --env-file .env \
+  -v "$ROOT_DIR:/app" \
+  llm-sec-lab

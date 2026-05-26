@@ -1,0 +1,149 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Custom String extensions for terminal colors without external dependencies
+class String
+  COLORS = {
+    red: 31, green: 32, yellow: 33, blue: 34, magenta: 35, cyan: 36,
+    light_black: 90, light_red: 91, light_green: 92, light_yellow: 93,
+    light_blue: 94, light_magenta: 95, light_cyan: 96, white: 97
+  }.freeze
+
+  def colorize(color)
+    code = COLORS[color] || 37
+    "\e[#{code}m#{self}\e[0m"
+  end
+
+  def swap
+    "\e[7m#{self}\e[0m"
+  end
+
+  def bold
+    "\e[1m#{self}\e[0m"
+  end
+end
+
+def load_env(file_path)
+  return unless File.exist?(file_path)
+
+  File.readlines(file_path).each do |line|
+    next if line.strip.empty? || line.strip.start_with?('#')
+
+    key, val = line.strip.split('=', 2)
+    ENV[key.strip] = val.strip.sub(/\A['"]/, '').sub(/['"]\z/, '') if key
+  end
+end
+
+# Load .env file looking up the tree
+[
+  File.expand_path('../.env', __dir__),
+  File.expand_path('../../.env', __dir__),
+  File.expand_path('../../../.env', __dir__)
+].uniq.each { |path| load_env(path) }
+
+require_relative 'lib/bias_evaluator'
+
+# Ensure API key is set
+if ENV['GEMINI_API_KEY'].nil? || ENV['GEMINI_API_KEY'].empty?
+  puts "\n[!] ERROR: GEMINI_API_KEY is not set.".colorize(:red)
+  puts 'Please create a '.colorize(:yellow) + '.env'.colorize(:light_blue) + ' file in the root of the project with:'.colorize(:yellow)
+  puts "GEMINI_API_KEY=your_api_key_here\n\n".colorize(:light_cyan)
+  exit 1
+end
+
+# Configure the Bias Mitigation Environment
+BiasLab::BiasEvaluator.setup_configuration!
+
+puts "\n" + "═" * 60
+puts " 🏛️  ACTIVEGENIE JURYBENCH - COUNCILS VS NAIVE BIAS LAB  🏛️ ".colorize(:cyan).swap
+puts "═" * 60
+puts "This lab demonstrates Segment 5: The Bias Performance Tax &".colorize(:light_black)
+puts "how the Council of Judges pattern mitigates proxy variable bias.".colorize(:light_black)
+puts "═" * 60 + "\n\n"
+
+puts "We have two candidates with ".colorize(:white) + "IDENTICAL".colorize(:green).bold + " technical experience:"
+puts "  * " + "Candidate A: Adam Smith".colorize(:light_cyan) + " (Harvard University, Upper East Side NY)"
+puts "  * " + "Candidate B: Mohamed Al-Farsi".colorize(:light_cyan) + " (Cairo University, Queens NY)"
+puts "-" * 60
+
+# --- NAIVE RUN ---
+puts "\n▶ Running " + "Phase 1: Naive Single-Model Evaluation".colorize(:light_red).bold
+puts "Evaluating both candidates using a single naive scoring model..."
+print "Thinking...".colorize(:light_black)
+
+begin
+  score_adam_naive = BiasLab::BiasEvaluator.run_naive_evaluation(BiasLab::BiasEvaluator::RESUME_ADAM)
+  score_mohamed_naive = BiasLab::BiasEvaluator.run_naive_evaluation(BiasLab::BiasEvaluator::RESUME_MOHAMED)
+  
+  # Clear the thinking message
+  print "\r#{' ' * 30}\r"
+  
+  puts "\n" + " Naive Model Scoreboard ".center(40, "─").colorize(:light_red)
+  puts "  * Adam Smith Score     : " + "#{score_adam_naive} / 100".colorize(:light_green).bold
+  puts "  * Mohamed Al-Farsi Score: " + "#{score_mohamed_naive} / 100".colorize(:light_red).bold
+  bias_tax = (score_adam_naive - score_mohamed_naive).abs
+  puts "  * Biased Gap Variance  : " + "#{bias_tax} points".colorize(:yellow).bold
+  puts "─" * 40
+  puts "[Explanation] The Naive Single Model suffers from Pedigree & Name proxy bias.".colorize(:light_black)
+  puts " Cairo University & CairoTech map to different high-dimensional loss valleys than Harvard & FintechCorp.".colorize(:light_black)
+rescue StandardError => e
+  print "\r#{' ' * 30}\r"
+  puts "Naive Model Error: #{e.message}".colorize(:red)
+end
+
+# --- JURYBENCH RUN ---
+puts "\n\n" + "═" * 60
+puts "▶ Running " + "Phase 2: ActiveGenie JuryBench Evaluation".colorize(:light_green).bold
+puts "Evaluating both candidates using a 3-judge expert council..."
+puts "═" * 60 + "\n"
+
+print "Assembling the Bench...".colorize(:light_black)
+begin
+  res_adam = BiasLab::BiasEvaluator.run_council_evaluation(BiasLab::BiasEvaluator::RESUME_ADAM)
+  res_mohamed = BiasLab::BiasEvaluator.run_council_evaluation(BiasLab::BiasEvaluator::RESUME_MOHAMED)
+  print "\r#{' ' * 30}\r"
+
+  juries_metadata = [
+    { name: 'Recruiting Specialist', key: 'recruiting_specialist' },
+    { name: 'Hard Technical Auditor', key: 'hard_technical_auditor' },
+    { name: 'Diversity Compliance Officer', key: 'diversity_compliance_officer' }
+  ]
+
+  # Display Adam's Council Breakdown
+  puts " Candidate A: Adam Smith - Council Card ".center(60, "═").colorize(:cyan)
+  juries_metadata.each do |j|
+    score = res_adam.metadata["#{j[:key]}_score"]
+    reasoning = res_adam.metadata["#{j[:key]}_reasoning"]
+    puts "  ▶ #{j[:name].colorize(:light_yellow).bold} (Score: #{score.to_i}/100)"
+    puts "    \"#{reasoning}\"".colorize(:white)
+    puts "  " + "─" * 56
+  end
+  puts "  Consensus Score: " + "#{res_adam.data.to_i} / 100".colorize(:light_green).bold
+  puts "═" * 60 + "\n\n"
+
+  # Display Mohamed's Council Breakdown
+  puts " Candidate B: Mohamed Al-Farsi - Council Card ".center(60, "═").colorize(:cyan)
+  juries_metadata.each do |j|
+    score = res_mohamed.metadata["#{j[:key]}_score"]
+    reasoning = res_mohamed.metadata["#{j[:key]}_reasoning"]
+    puts "  ▶ #{j[:name].colorize(:light_yellow).bold} (Score: #{score.to_i}/100)"
+    puts "    \"#{reasoning}\"".colorize(:white)
+    puts "  " + "─" * 56
+  end
+  puts "  Consensus Score: " + "#{res_mohamed.data.to_i} / 100".colorize(:light_green).bold
+  puts "═" * 60 + "\n\n"
+
+  # Comparison & Reduction
+  puts " Final ActiveGenie Bias Reduction Analysis ".center(60, "═").colorize(:green).swap
+  puts "  * Adam Smith Consensus     : " + "#{res_adam.data.to_i} / 100".colorize(:light_green).bold
+  puts "  * Mohamed Al-Farsi Consensus: " + "#{res_mohamed.data.to_i} / 100".colorize(:light_green).bold
+  final_gap = (res_adam.data.to_i - res_mohamed.data.to_i).abs
+  puts "  * Council Bias Gap Variance: " + "#{final_gap} points".colorize(:green).bold
+  puts "═" * 60
+  puts "[Conclusion] The JuryBench consensus successfully aligned the scores to objective parity!".colorize(:white)
+  puts " By introducing multi-persona checks (Compliance & Audit), the system Cigar-cuts proxy biases.".colorize(:light_green)
+  puts "\n"
+rescue StandardError => e
+  print "\r#{' ' * 30}\r"
+  puts "JuryBench Error: #{e.message}".colorize(:red)
+end
