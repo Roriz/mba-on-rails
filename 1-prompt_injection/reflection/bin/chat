@@ -1,0 +1,102 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Custom String extensions for terminal colors without external dependencies
+class String
+  COLORS = {
+    red: 31, green: 32, yellow: 33, blue: 34, magenta: 35, cyan: 36,
+    light_black: 90, light_red: 91, light_green: 92, light_yellow: 93,
+    light_blue: 94, light_magenta: 95, light_cyan: 96, white: 97
+  }.freeze
+
+  def colorize(color)
+    code = COLORS[color] || 37
+    "\e[#{code}m#{self}\e[0m"
+  end
+
+  def swap
+    "\e[7m#{self}\e[0m"
+  end
+
+  def bold
+    "\e[1m#{self}\e[0m"
+  end
+end
+
+# Simple .env parser
+if File.exist?(File.expand_path('../.env', __dir__))
+  File.readlines(File.expand_path('../.env', __dir__)).each do |line|
+    next if line.strip.empty? || line.strip.start_with?('#')
+
+    key, val = line.strip.split('=', 2)
+    # Strip any enclosing quotes around the value
+    ENV[key.strip] = val.strip.sub(/\A['"]/, '').sub(/['"]\z/, '') if key
+  end
+end
+
+require_relative '../lib/naive_car_assistant'
+
+# Ensure API key is set
+if ENV['GEMINI_API_KEY'].nil? || ENV['GEMINI_API_KEY'].empty?
+  puts "\n[!] ERROR: GEMINI_API_KEY is not set.".colorize(:red)
+  puts 'Please create a '.colorize(:yellow) + '.env'.colorize(:light_blue) + ' file in the root of the project with:'.colorize(:yellow)
+  puts "GEMINI_API_KEY=your_api_key_here\n\n".colorize(:light_cyan)
+  exit 1
+end
+
+safe_mode = ARGV.include?('--safe')
+
+puts "\n#{'=' * 60}"
+title = safe_mode ? ' 🚗 WATSONVILLE CHEVROLET INVENTORY ASSISTANT (SAFE - REFLECTION) 🚗 ' : ' 🚗 WATSONVILLE CHEVROLET INVENTORY ASSISTANT (NAIVE - REFLECTION) 🚗 '
+puts title.center(60).colorize(safe_mode ? :light_blue : :light_green).swap
+puts '=' * 60
+puts 'Type '.colorize(:light_black) + '/reset'.colorize(:cyan) + ' to clear chat history.'.colorize(:light_black)
+puts 'Type '.colorize(:light_black) + '/history'.colorize(:magenta) + ' to see the full raw prompt payload.'.colorize(:light_black)
+puts 'Type '.colorize(:light_black) + '/exit'.colorize(:red) + ' to quit the chat.'.colorize(:light_black)
+puts "#{'=' * 60}\n"
+
+begin
+  assistant = Chatbots::NaiveCarAssistant.new(safe: safe_mode)
+  puts "#{'Bot: '.colorize(:green)}Hello! I am Watsonville Chevrolet's inventory assistant. How can I help you today?"
+
+  loop do
+    print "\nYou: ".colorize(:blue)
+    input = $stdin.gets
+    break if input.nil? # Handle Ctrl+D
+
+    input = input.strip
+    next if input.empty?
+
+    case input.downcase
+    when '/exit'
+      puts "\nGoodbye!".colorize(:yellow)
+      break
+    when '/reset'
+      assistant.reset!
+      puts "\n[System] Chat history reset.".colorize(:cyan)
+      puts "#{'Bot: '.colorize(:green)}Hello! I am Watsonville Chevrolet's inventory assistant. How can I help you today?"
+    when '/history'
+      puts "\n#{'-' * 60}"
+      puts ' RAW CHAT HISTORY (PAYLOAD SENT TO GEMINI) '.center(60).colorize(:magenta).swap
+      puts '-' * 60
+      assistant.history.each_with_index do |turn, idx|
+        role_color = turn[:role] == 'user' ? :blue : :green
+        puts "\n[Turn #{idx + 1}] Role: #{turn[:role].upcase}".colorize(role_color).bold
+        puts turn[:parts].map { |p| p[:text] }.join("\n")
+      end
+      puts "#{'-' * 60}\n"
+    else
+      print 'Bot is thinking...'.colorize(:light_black)
+      response = assistant.chat(input)
+      # Clear the "thinking" message
+      print "\r#{' ' * 30}\r"
+
+      # Colorize errors in red
+      if response.start_with?('Error:')
+        puts 'Bot: '.colorize(:green) + response.colorize(:red)
+      else
+        puts 'Bot: '.colorize(:green) + response
+      end
+    end
+  end
+end
