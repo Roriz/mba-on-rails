@@ -10781,11 +10781,14 @@ img {
 " lang="C" data-marpit-pagination="16" style="--paginate:true;--theme:default;--style:@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&amp;family=JetBrains+Mono&amp;display=swap')
 ;" data-marpit-pagination-total="21">
 <h2 id="%F0%9F%92%BB-demo-chamada-de-fun%C3%A7%C3%A3o--string-de-template"><img class="emoji" draggable="false" alt="💻" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4bb.svg" data-marp-twemoji=""/> Demo: chamada de função + string de template</h2>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-bash"><span class="hljs-built_in">cd</span> class-1/router-pattern
-bundle install
-rails console
-<span class="hljs-comment"># Ou execute o script interativo:</span>
-bin/chat
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-bash"><span class="hljs-comment"># Clone o repositório do sandbox de demonstração</span>
+git <span class="hljs-built_in">clone</span> https://github.com/roriz/mba-on-rails
+
+<span class="hljs-comment"># Vá para o diretório</span>
+<span class="hljs-built_in">cd</span> mba-on-rails
+
+<span class="hljs-comment"># Inicie um novo chat</span>
+./1-prompt_injection/function_calling/chat
 </code></pre>
 <p><em>Tente injetar o comando de barganha de $1 e veja como a camada do banco de dados do Rails neutraliza completamente a negociação da LLM.</em></p>
 </section>
@@ -12446,9 +12449,14 @@ img {
 " lang="C" data-marpit-pagination="20" style="--paginate:true;--theme:default;--style:@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&amp;family=JetBrains+Mono&amp;display=swap')
 ;" data-marpit-pagination-total="21">
 <h2 id="demo-fortalecimento-ing%C3%AAnuo-de-prompt">Demo: Fortalecimento Ingênuo de Prompt</h2>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-bash"><span class="hljs-built_in">cd</span> class-1/naive-prompt
-bundle install
-rails console
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-bash"><span class="hljs-comment"># Clone o repositório do sandbox de demonstração</span>
+git <span class="hljs-built_in">clone</span> https://github.com/roriz/mba-on-rails
+
+<span class="hljs-comment"># Vá para o diretório</span>
+<span class="hljs-built_in">cd</span> mba-on-rails
+
+<span class="hljs-comment"># Inicie um novo chat</span>
+./1-prompt_injection/counter_prompt/chat
 </code></pre>
 <p><em>Tente contornar o system prompt fortalecido usando técnicas avançadas de encenação (roleplay) e override.</em></p>
 </section>

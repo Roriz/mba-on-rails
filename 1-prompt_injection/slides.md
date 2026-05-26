@@ -793,11 +793,14 @@ Objetivo: Aprofundar na implementação Ruby/Rails
 ## 💻 Demo: chamada de função + string de template
 
 ```bash
-cd class-1/router-pattern
-bundle install
-rails console
-# Ou execute o script interativo:
-bin/chat
+# Clone o repositório do sandbox de demonstração
+git clone https://github.com/roriz/mba-on-rails
+
+# Vá para o diretório
+cd mba-on-rails
+
+# Inicie um novo chat
+./1-prompt_injection/function_calling/chat
 ```
 
 *Tente injetar o comando de barganha de $1 e veja como a camada do banco de dados do Rails neutraliza completamente a negociação da LLM.*
@@ -867,9 +870,14 @@ Objetivo: Apresentar o estudo de caso do bug de goblins da OpenAI
 ## Demo: Fortalecimento Ingênuo de Prompt
 
 ```bash
-cd class-1/naive-prompt
-bundle install
-rails console
+# Clone o repositório do sandbox de demonstração
+git clone https://github.com/roriz/mba-on-rails
+
+# Vá para o diretório
+cd mba-on-rails
+
+# Inicie um novo chat
+./1-prompt_injection/counter_prompt/chat
 ```
 
 *Tente contornar o system prompt fortalecido usando técnicas avançadas de encenação (roleplay) e override.*

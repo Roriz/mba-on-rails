@@ -1125,14 +1125,13 @@ Objetivo: Transição Visual
 
 ```bash
 # Clone o repositório do sandbox de demonstração
-git clone https://github.com/roriz/mba-on-rails-demos
+git clone https://github.com/roriz/mba-on-rails
 
-# Vá para o diretório e instale as dependências
-cd mba-on-rails-demos
-bundle install
+# Vá para o diretório
+cd mba-on-rails
 
-# Inicie uma sessão de console
-rails console
+# Inicie um novo chat
+./0-initialization/chat
 ```
 
 > ### "O modelo não possui um parser que isole código de dados. Como tudo é linguagem, tudo é executável."
