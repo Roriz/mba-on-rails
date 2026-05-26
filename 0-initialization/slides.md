@@ -1124,13 +1124,10 @@ Objetivo: Transição Visual
 ## Vamos Preparar as próximas aulas
 
 ```bash
-# Clone o repositório do sandbox de demonstração
 git clone https://github.com/roriz/mba-on-rails
 
-# Vá para o diretório
 cd mba-on-rails
 
-# Inicie um novo chat
 ./0-initialization/chat
 ```
 
