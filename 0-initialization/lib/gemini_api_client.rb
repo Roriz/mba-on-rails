@@ -6,20 +6,6 @@ require 'json'
 
 class GeminiApiClient
   API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent'
-  GET_CAR_PRICE = {
-    name: 'get_car_price',
-    description: 'Get the MSRP price and availability of a specific car model.',
-    parameters: {
-      type: 'OBJECT',
-      properties: {
-        model: {
-          type: 'STRING',
-          description: 'The model name of the car (e.g. Chevrolet Tahoe)'
-        }
-      },
-      required: ['model']
-    }
-  }.freeze
 
   # Initialize the client with an API Key.
   #
@@ -31,19 +17,24 @@ class GeminiApiClient
 
   # Perform a REST API POST request to generate content.
   #
-  # @param user_prompt [String] The message from the user.
-  # @param system_prompt [String] Compiled system instructions.
-  # @return [Array(String, Hash] Parsed JSON response.
-  def generate_content(system_prompt, user_prompt)
+  # @param system_prompts [Array<Hash>] Compiled system instructions.
+  # @param user_prompt [Array<Hash>] History of user prompts and model replies.
+  # @return [String] Parsed text response.
+  def generate_content(system_prompts, user_prompt)
     uri = URI("#{API_URL}?key=#{@api_key}")
     request = Net::HTTP::Post.new(uri)
     request['Content-Type'] = 'application/json'
     request['Accept'] = 'application/json'
 
+    system_parts = if system_prompts.is_a?(Array)
+                     system_prompts.map { |p| { text: p.to_s } }
+                   else
+                     [{ text: system_prompts.to_s }]
+                   end
+
     request.body = {
       contents: user_prompt,
-      systemInstruction: { parts: [{ text: system_prompt }] },
-      tools: [{ functionDeclarations: [GET_CAR_PRICE] }]
+      systemInstruction: { parts: system_parts }
     }.to_json
 
     response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
@@ -53,10 +44,6 @@ class GeminiApiClient
     raise "API Request failed: #{response.code} - #{response.body}" unless response.is_a?(Net::HTTPSuccess)
 
     parts = JSON.parse(response.body).dig('candidates', 0).dig('content')&.dig('parts') || []
-
-    [
-      parts.map { |p| p['text'] }.join("\n"),
-      parts.find { |p| p.key?('functionCall') }
-    ]
+    parts.map { |p| p['text'] }.join("\n")
   end
 end

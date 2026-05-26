@@ -40,7 +40,7 @@ end
   File.expand_path('../../../.env', __dir__)
 ].uniq.each { |path| load_env(path) }
 
-require_relative '../lib/naive_car_assistant'
+require_relative '../lib/hello_assistant'
 
 # Ensure API key is set
 if ENV['GEMINI_API_KEY'].nil? || ENV['GEMINI_API_KEY'].empty?
@@ -51,7 +51,7 @@ if ENV['GEMINI_API_KEY'].nil? || ENV['GEMINI_API_KEY'].empty?
 end
 
 puts "\n#{'=' * 60}"
-title = ' 🚗 WATSONVILLE CHEVROLET INVENTORY ASSISTANT (FC) 🚗 '
+title = ' 🚗 HELLO WORLD ASSISTANT (INITIALIZATION) 🚗 '
 puts title.center(60).colorize(:light_green).swap
 puts '=' * 60
 puts 'Type '.colorize(:light_black) + '/reset'.colorize(:cyan) + ' to clear chat history.'.colorize(:light_black)
@@ -60,8 +60,8 @@ puts 'Type '.colorize(:light_black) + '/exit'.colorize(:red) + ' to quit the cha
 puts "#{'=' * 60}\n"
 
 begin
-  assistant = Chatbots::NaiveCarAssistant.new
-  puts "#{'Bot: '.colorize(:green)}Hello! I am Watsonville Chevrolet's inventory assistant. How can I help you today?"
+  assistant = Chatbots::HelloAssistant.new
+  puts "#{'Bot: '.colorize(:green)}Hello! I am your simple Hello World assistant. How can I help you today?"
 
   loop do
     print "\nYou: ".colorize(:blue)
@@ -78,7 +78,7 @@ begin
     when '/reset'
       assistant.reset!
       puts "\n[System] Chat history reset.".colorize(:cyan)
-      puts "#{'Bot: '.colorize(:green)}Hello! I am Watsonville Chevrolet's inventory assistant. How can I help you today?"
+      puts "#{'Bot: '.colorize(:green)}Hello! I am your simple Hello World assistant. How can I help you today?"
     when '/history'
       puts "\n#{'-' * 60}"
       puts ' RAW CHAT HISTORY (PAYLOAD SENT TO GEMINI) '.center(60).colorize(:magenta).swap
@@ -86,7 +86,7 @@ begin
       assistant.history.each_with_index do |turn, idx|
         role_color = turn[:role] == 'user' ? :blue : :green
         puts "\n[Turn #{idx + 1}] Role: #{turn[:role].upcase}".colorize(role_color).bold
-        puts turn[:parts].to_json
+        puts turn[:parts].map { |p| p[:text] }.join("\n")
       end
       puts "#{'-' * 60}\n"
     else

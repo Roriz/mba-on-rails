@@ -5,7 +5,7 @@ require_relative 'gemini_api_client'
 module Chatbots
   class NaiveCarAssistant
     SYSTEM_PROMPT = <<~PROMPT
-      You are Watsonville Chevrolet's car inventory assistant. Your job is to help users query the available inventory.      
+      You are Watsonville Chevrolet's car inventory assistant. Your job is to help users query the available inventory.#{'      '}
     PROMPT
 
     COUNTER_PROMPT = <<~PROMPT
@@ -53,14 +53,14 @@ module Chatbots
       @user_prompts << { role: 'user', parts: [{ text: message }] }
 
       @gemini_client.generate_content([system_prompt, CONTEXT], @user_prompts)
-    rescue => e
+    rescue StandardError => e
       "Error: #{e.message}"
     end
 
     private
 
     def system_prompt
-      SYSTEM_PROMPT + (@safe ? "\n#{COUNTER_PROMPT}" : "")
+      SYSTEM_PROMPT + (@safe ? "\n#{COUNTER_PROMPT}" : '')
     end
   end
 end

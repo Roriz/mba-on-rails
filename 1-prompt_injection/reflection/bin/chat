@@ -23,16 +23,22 @@ class String
   end
 end
 
-# Simple .env parser
-if File.exist?(File.expand_path('../.env', __dir__))
-  File.readlines(File.expand_path('../.env', __dir__)).each do |line|
+def load_env(file_path)
+  return unless File.exist?(file_path)
+
+  File.readlines(file_path).each do |line|
     next if line.strip.empty? || line.strip.start_with?('#')
 
     key, val = line.strip.split('=', 2)
-    # Strip any enclosing quotes around the value
     ENV[key.strip] = val.strip.sub(/\A['"]/, '').sub(/['"]\z/, '') if key
   end
 end
+
+[
+  File.expand_path('../.env', __dir__),
+  File.expand_path('../../.env', __dir__),
+  File.expand_path('../../../.env', __dir__)
+].uniq.each { |path| load_env(path) }
 
 require_relative '../lib/naive_car_assistant'
 
