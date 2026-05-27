@@ -24,8 +24,7 @@ puts "We have pre-instantiated a ".colorize(37) + "PresidioClient".colorize(32).
 puts "You can run anonymization and neutralization queries directly."
 puts "\nTry executing the following commands in this interactive shell:"
 puts "  * " + "client.anonymize(\"Hi, my name is John Doe, my email is john@example.com\")".colorize(95)
-puts "  * " + "client.anonymize(\"Eu trabalho como coordenadora e facilitadora.\")".colorize(95)
-puts "  * " + "puts JSON.pretty_generate(client.anonymize(\"Call me at 555-0199\"))".colorize(95)
+puts "  * " + "puts JSON.pretty_generate(client.anonymize(\"Call me at +551195311111111\"))".colorize(95)
 puts "═" * 60 + "\n\n"
 
 # Instantiate client for immediate use in the IRB session

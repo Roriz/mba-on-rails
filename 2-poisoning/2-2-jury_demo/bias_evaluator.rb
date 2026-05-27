@@ -13,6 +13,7 @@ module BiasLab
       ActiveGenie.configure do |config|
         config.llm.model = 'gemini-2.5-flash-lite'
         config.providers.google.api_key = ENV['GEMINI_API_KEY']
+        config.log.output = ->(_log) {}
       end
     end
 

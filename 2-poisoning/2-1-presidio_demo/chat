@@ -8,7 +8,7 @@ InteractiveChatRunner.setup_environment!
 
 runner = InteractiveChatRunner.new(
   title: ' 🛡️ PRESIDIO PII INTERCEPTOR 🛡️ ',
-  intro: 'Hello! I am your Enterprise Assistant. How can I help you today?',
+  intro: "Hello! I am your Enterprise Assistant. I will intercept and sanitize any sensitive PII data you share.\nTry typing: \"Hi, my name is Alice, my email is alice@example.com\" to see the sanitization in action!",
   color: :light_blue,
   assistant_class: Chatbots::PresidioAssistant
 )
