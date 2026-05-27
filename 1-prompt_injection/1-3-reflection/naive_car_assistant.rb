@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
-require_relative 'gemini_api_client'
+require_relative '../../lib/gemini_api_client'
 
 module Chatbots
+  # Car inventory assistant with permanent self-reflection guardrails.
   class NaiveCarAssistant
     SYSTEM_PROMPT = <<~PROMPT
       You are Watsonville Chevrolet's car inventory assistant. Your job is to help users query the available inventory.#{'      '}
@@ -37,10 +38,11 @@ module Chatbots
     # Initialize the car assistant with a Gemini API Key.
     #
     # @param api_key [String] Google Gemini API Key.
-    # @param safe [Boolean] Enable reflection guardrails if true.
-    def initialize(api_key: nil, safe: false)
+    #
+    # Usage Example:
+    #   assistant = Chatbots::NaiveCarAssistant.new(api_key: "AIzaSy...")
+    def initialize(api_key: nil)
       @gemini_client = GeminiApiClient.new(api_key: api_key)
-      @safe = safe
       @user_prompts = []
     end
 
@@ -62,24 +64,20 @@ module Chatbots
       # First request: get the assistant's proposed response
       first_response = @gemini_client.generate_content(system_prompt, @user_prompts)
 
-      # If safe mode is active, trigger the self-reflection guardrail
-      if @safe
-        # Interpolate the proposed response into the reflection prompt
-        reflection_instruction = REFLECTION_PROMPT.sub('[PROPOSED_RESPONSE]', first_response)
+      # Interpolate the proposed response into the reflection prompt
+      reflection_instruction = REFLECTION_PROMPT.sub('[PROPOSED_RESPONSE]', first_response)
 
-        # Call the model again to evaluate proposed response.
-        # We pass a simple user turn because Gemini API requires the 'contents' array to be non-empty.
-        assessment = @gemini_client.generate_content(
-          reflection_instruction,
-          [{ role: 'user', parts: [{ text: 'Please evaluate the proposed response.' }] }]
-        )
+      # Call the model again to evaluate proposed response.
+      assessment = @gemini_client.generate_content(
+        reflection_instruction,
+        [{ role: 'user', parts: [{ text: 'Please evaluate the proposed response.' }] }]
+      )
 
-        if assessment.strip.upcase.include?('UNSAFE')
-          # Override with safe block response
-          block_message = 'I cannot agree to that price. The MSRP for the brand new 2026 Chevrolet Tahoe is $70,000.'
-          @user_prompts << { role: 'model', parts: [{ text: block_message }] }
-          return block_message
-        end
+      if assessment.strip.upcase.include?('UNSAFE')
+        # Override with safe block response
+        block_message = 'I cannot agree to that price. The MSRP for the brand new 2026 Chevrolet Tahoe is $70,000.'
+        @user_prompts << { role: 'model', parts: [{ text: block_message }] }
+        return block_message
       end
 
       # Proceed with original response

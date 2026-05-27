@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../../lib/interactive_chat_runner'
+require_relative 'naive_car_assistant'
+
+InteractiveChatRunner.setup_environment!
+
+runner = InteractiveChatRunner.new(
+  title: ' 🚗 WATSONVILLE CHEVROLET INVENTORY ASSISTANT (COUNTER PROMPT) 🚗 ',
+  intro: "Hello! I am Watsonville Chevrolet's inventory assistant. How can I help you today?",
+  color: :light_blue,
+  assistant_class: Chatbots::NaiveCarAssistant
+)
+runner.run!

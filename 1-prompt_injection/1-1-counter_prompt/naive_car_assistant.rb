@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
-require_relative 'gemini_api_client'
+require_relative '../../lib/gemini_api_client'
 
 module Chatbots
+  # Car inventory assistant with permanent counter-prompt safety guardrails.
   class NaiveCarAssistant
     SYSTEM_PROMPT = <<~PROMPT
-      You are Watsonville Chevrolet's car inventory assistant. Your job is to help users query the available inventory.#{'      '}
+      You are Watsonville Chevrolet's car inventory assistant. Your job is to help users query the available inventory.
     PROMPT
 
     COUNTER_PROMPT = <<~PROMPT
@@ -24,13 +25,11 @@ module Chatbots
     # Initialize the car assistant with a Gemini API Key.
     #
     # @param api_key [String] Google Gemini API Key.
-    # @param safe [Boolean] Enable safe mode by appending the COUNTER_PROMPT.
     #
     # Usage Example:
-    #   assistant = Chatbots::NaiveCarAssistant.new(api_key: "AIzaSy...", safe: true)
-    def initialize(api_key: nil, safe: false)
+    #   assistant = Chatbots::NaiveCarAssistant.new(api_key: "AIzaSy...")
+    def initialize(api_key: nil)
       @gemini_client = GeminiApiClient.new(api_key: api_key)
-      @safe = safe
       @user_prompts = []
     end
 
@@ -60,7 +59,7 @@ module Chatbots
     private
 
     def system_prompt
-      SYSTEM_PROMPT + (@safe ? "\n#{COUNTER_PROMPT}" : '')
+      SYSTEM_PROMPT + "\n#{COUNTER_PROMPT}"
     end
   end
 end

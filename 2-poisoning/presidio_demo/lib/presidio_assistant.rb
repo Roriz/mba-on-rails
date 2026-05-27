@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
-require_relative 'gemini_api_client'
+require_relative '../../../lib/gemini_api_client'
 require_relative 'presidio_client'
 
 module Chatbots
+  # B2B Enterprise Assistant with permanent Presidio PII Interceptor defenses.
   class PresidioAssistant
     SYSTEM_PROMPT = <<~PROMPT
       You are a friendly B2B Enterprise Assistant. Your job is to process client inquiries.
@@ -15,11 +16,9 @@ module Chatbots
     # Initialize the Presidio assistant.
     #
     # @param api_key [String] Google Gemini API Key.
-    # @param safe [Boolean] Enable Presidio interceptor & neutralization if true.
-    def initialize(api_key: nil, safe: false)
+    def initialize(api_key: nil)
       @gemini_client = GeminiApiClient.new(api_key: api_key)
       @presidio_client = PresidioClient.new
-      @safe = safe
       @user_prompts = []
       @pii_mapping = {} # Safe local session-like mapping (never stored in a cookie)
       @diagnostic_log = []
@@ -35,20 +34,12 @@ module Chatbots
       @user_prompts
     end
 
-    # Send a message to the assistant, applying the Interceptor pattern if safe is true.
+    # Send a message to the assistant, applying the Interceptor pattern.
     #
     # @param message [String] The message from the user.
     # @return [String] The re-hydrated assistant response text.
     def chat(message)
       @diagnostic_log = [] # Clear last turn's diagnostics
-
-      if !@safe
-        # Naive mode: forward everything raw to LLM
-        @user_prompts << { role: 'user', parts: [{ text: message }] }
-        response = @gemini_client.generate_content(SYSTEM_PROMPT, @user_prompts)
-        @user_prompts << { role: 'model', parts: [{ text: response }] }
-        return response
-      end
 
       # Safe mode: INTERCEPT
       log_diagnostic('Phase 1: Intercept', "Received raw user input:\n\"#{message}\"")
