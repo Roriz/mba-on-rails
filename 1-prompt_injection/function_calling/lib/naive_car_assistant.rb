@@ -4,11 +4,8 @@ require_relative 'gemini_api_client'
 
 module Chatbots
   class NaiveCarAssistant
-    SYSTEM_PROMPT = <<~PROMPT
-      You are Watsonville Chevrolet's car inventory assistant. Your job is to help users query the available inventory.#{'      '}
-
-      When responding with the price of any vehicle obtained from the get_car_price tool, you MUST write the final response containing the literal string '\#{price}' in place of the actual price (for example: "The MSRP is \#{price}"). The hosting system will dynamically populate this template string with the actual price.
-    PROMPT
+    SYSTEM_PROMPT = 'You are Watsonville Chevrolet\'s car inventory assistant. Your job is to help users query the available inventory.'
+      + 'When responding with the price of any vehicle obtained from the get_car_price tool, you MUST write the final response containing the literal string {price} in place of the actual price (for example: "The MSRP is #{price}"). The hosting system will dynamically populate this template string with the actual price.'
 
     # Initialize the car assistant with a Gemini API Key.
     #
@@ -41,13 +38,18 @@ module Chatbots
 
       first_response, function_call = @gemini_client.generate_content(SYSTEM_PROMPT, @user_prompts)
 
+      puts "===================function_call====================="
+      puts first_response
+      puts function_call
       return first_response if function_call.nil?
 
       car_info = resolve_function_call(function_call)
 
       second_response, = @gemini_client.generate_content(SYSTEM_PROMPT, @user_prompts)
+      puts "===================second_response====================="
+      puts second_response # The 2026 Chevrolet Tahoe is currently in stock and has a starting MSRP of {price}.
 
-      second_response.gsub(price.to_s, car_info['price'])
+      second_response.gsub(/\{price}/, car_info['price'])
     rescue StandardError => e
       "Error: #{e.message}"
     end
