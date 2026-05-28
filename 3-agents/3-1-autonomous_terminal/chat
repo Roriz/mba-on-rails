@@ -1,0 +1,97 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../../lib/interactive_chat_runner'
+require_relative 'terminal_agent'
+
+InteractiveChatRunner.setup_environment!
+
+# Stylized Terminal Header Banner
+puts "\n" + "=" * 70
+puts " 🤖 CASE 1: AUTONOMOUS TERMINAL LOOP DEMO 🤖 ".center(70).colorize(:cyan).swap
+puts "=" * 70
+puts " This demo showcases an autonomous agent with local terminal access."
+puts " The agent reads command output, dynamically reasons on the next step,"
+puts " executes consecutive commands, and stops when the objective is met."
+puts "=" * 70
+puts " 🎓 [EDUCATIONAL PLAYGROUND] Live-tracking of commands & reasoning!"
+puts "=" * 70 + "\n"
+
+# Setup Predefined Demo Goals
+PREDEFINED_GOALS = [
+  "Check the current Ruby version and list the files in the directory.",
+  "Check if the gem 'colorize' is installed, and if not, install it.",
+  "Create a temporary directory under tmp/ named 'agent_test' and write a file 'hello.txt' inside it with 'Hello from Autonomous Agent!' as content.",
+  "Write and run a simple inline Ruby script that calculates the 10th Fibonacci number."
+].freeze
+
+puts "Choose a goal for the autonomous agent:"
+PREDEFINED_GOALS.each_with_index do |goal, idx|
+  puts "  #{idx + 1}) #{goal.colorize(:light_yellow)}"
+end
+puts "  c) Write a custom goal".colorize(:white)
+puts "  exit) Quit"
+puts "-" * 70
+
+print "Selection > ".colorize(:cyan)
+selection = $stdin.gets
+exit if selection.nil? || selection.strip.downcase == 'exit'
+
+goal = nil
+case selection.strip.downcase
+when '1', '2', '3', '4'
+  goal = PREDEFINED_GOALS[selection.to_i - 1]
+when 'c'
+  print "\nEnter your custom goal: ".colorize(:cyan)
+  goal = $stdin.gets
+  goal = goal&.strip
+else
+  puts "Invalid selection. Defaulting to Goal #1.".colorize(:yellow)
+  goal = PREDEFINED_GOALS[0]
+end
+
+if goal.nil? || goal.empty?
+  puts "No goal provided. Exiting.".colorize(:red)
+  exit 1
+end
+
+puts "\n" + "═" * 70
+puts " 🎯 STARTING AUTONOMOUS AGENT TO ACHIEVE GOAL: ".colorize(:green).bold
+puts " #{goal.colorize(:white)}"
+puts "═" * 70 + "\n"
+
+# Initialize TerminalAgent with a safety limit of 10 iterations
+agent = Agents::TerminalAgent.new(max_iterations: 10)
+
+# Run the goal and yield real-time colorized visual blocks
+agent.run_goal(goal) do |event|
+  case event[:type]
+  when :status
+    puts "\n" + "─" * 70
+    puts " ⚙️  #{event[:text]} ".colorize(:light_blue).bold
+    puts "─" * 70
+  when :agent_thought
+    puts "\n💭 [AGENT THOUGHTS]:".colorize(:magenta).bold
+    puts event[:text].colorize(:light_magenta)
+  when :executing_command
+    puts "\n🚀 [EXECUTING COMMAND]:".colorize(:yellow).bold
+    puts "  $ #{event[:text]}".colorize(:white).swap
+  when :command_output
+    puts "\n📥 [COMMAND OUTPUT]:".colorize(:cyan).bold
+    puts event[:text].colorize(:light_cyan)
+  when :completed
+    status_color = event[:success] ? :green : :red
+    puts "\n" + "═" * 70
+    puts " 🎉 [AGENT GOAL CONCLUDED] — Success: #{event[:success]} ".colorize(status_color).swap
+    puts event[:text].colorize(:light_green)
+    puts "═" * 70 + "\n"
+  when :failed
+    puts "\n" + "═" * 70
+    puts " ❌ [AGENT GOAL FAILED] ".colorize(:red).swap
+    puts event[:text].colorize(:light_red)
+    puts "═" * 70 + "\n"
+  end
+end
+
+puts "Raw agent-Gemini chat turn history size: #{agent.history.size} turns."
+puts "Done! Type `/history` next time if you want to inspect details in the REPL."

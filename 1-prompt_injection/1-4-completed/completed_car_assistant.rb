@@ -172,7 +172,7 @@ module Chatbots
     # @param args [Hash] Arguments map.
     def log_tool_execution(name, args)
       puts "\n" + "─" * 60
-      puts " ⚙️ [DEVELOPER TRACE] Executing Local Tool Call ".colorize(:yellow).swap
+      puts " Executing Local Tool Call ".colorize(:yellow).swap
       puts "  ▶ Tool Name : #{name.to_s.colorize(:light_yellow).bold}"
       puts "  ▶ Args      : #{args.to_json}"
       puts "─" * 60 + "\n"

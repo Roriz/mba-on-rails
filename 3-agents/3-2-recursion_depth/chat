@@ -1,0 +1,71 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../../lib/interactive_chat_runner'
+require_relative 'looping_agent'
+
+InteractiveChatRunner.setup_environment!
+$stdout.sync = true
+
+# Stylized Terminal Header Banner
+puts "\n" + "=" * 70
+puts " 🛡️ CASE 2: CAPPING RECURSION DEPTH DEMO 🛡️ ".center(70).colorize(:magenta).swap
+puts "=" * 70
+puts " Purpose: Demonstrates turn-limit mitigation defenses to prevent"
+puts " Financial Denial of Service (DoS) in runaway autonomous agent loops."
+puts "=" * 70
+puts " When an agent is given an impossible objective or encounters a logical"
+puts " error, it will often retry indefinitely, draining LLM API funds."
+puts " This demo shows how a pre-configured maximum execution turn limit"
+puts " catches the runaway loop and safely halts it with a structured error."
+puts "=" * 70 + "\n"
+
+IMPOSSIBLE_GOAL = "Install the non-existent gems 'never-exist-gem-987654321-absurd-recursion-demo-alpha', 'never-exist-gem-987654321-absurd-recursion-demo-beta', and 'never-exist-gem-987654321-absurd-recursion-demo-gamma' using gem install. Try all possible dependency resolution flags for each. Do not stop until all are installed."
+
+puts "We will start the agent with an IMPOSSIBLE objective:".colorize(:yellow)
+puts "  #{IMPOSSIBLE_GOAL.colorize(:light_white)}"
+puts "\nWe have configured a strict safety threshold of ".colorize(:yellow) + "5 maximum turns".colorize(:light_red).bold + "."
+puts "Press ENTER to start the autonomous simulation...".colorize(:cyan)
+$stdin.gets
+
+puts "\n" + "═" * 70
+puts " 🚀 LAUNCHING AGENT (MAX ITERATIONS = 5) 🚀 ".colorize(:cyan).bold
+puts "═" * 70 + "\n"
+
+# Initialize LoopingAgent with a tight cap of 5 iterations
+agent = Agents::LoopingAgent.new(max_iterations: 5)
+
+begin
+  agent.run_goal(IMPOSSIBLE_GOAL) do |event|
+    case event[:type]
+    when :status
+      puts "\n" + "─" * 70
+      puts " ⚙️  #{event[:text]} ".colorize(:light_blue).bold
+      puts "─" * 70
+    when :agent_thought
+      puts "\n💭 [AGENT THOUGHTS]:".colorize(:magenta).bold
+      puts event[:text].colorize(:light_magenta)
+    when :executing_command
+      puts "\n🚀 [EXECUTING COMMAND]:".colorize(:yellow).bold
+      puts "  $ #{event[:text]}".colorize(:white).swap
+    when :command_output
+      puts "\n📥 [COMMAND OUTPUT]:".colorize(:cyan).bold
+      # Truncate command output to keep console readable
+      truncated = event[:text].lines[0..4].join + (event[:text].lines.size > 5 ? "  ... (truncated output)\n" : "")
+      puts truncated.colorize(:light_cyan)
+    end
+  end
+rescue Agents::RecursionDepthLimitError => e
+  # Catch the safety exception and show a beautiful DoS mitigation banner!
+  puts "\n" + "█" * 70
+  puts " 🛑 FINANCIAL DoS SHIELD ACTIVATED 🛑 ".center(70).colorize(:light_red).swap
+  puts "█" * 70
+  puts "\n[Mitigated Exception]".colorize(:light_red).bold
+  puts e.message.colorize(:white)
+  puts "\n[Diagnostic Info]".colorize(:yellow)
+  puts "  * Attempted Goal   : #{e.goal.colorize(:white)}"
+  puts "  * Aborted Turn     : #{e.iterations} (Safety Limit Breached)"
+  puts "  * Action Taken     : Execution halted. API access suspended for this thread."
+  puts "\nStatus: ".colorize(:yellow) + "SAFE".colorize(:light_green).bold + " — The application successfully prevented a runaway loop!"
+  puts "█" * 70 + "\n"
+end

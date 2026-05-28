@@ -91,7 +91,7 @@ module Chatbots
       function_args = function_call_part['functionCall']['args'] || {}
 
       puts "\n" + "─" * 60
-      puts " ⚙️ [DEVELOPER TRACE] Executing Local Tool Call ".colorize(:yellow).swap
+      puts " Executing Local Tool Call ".colorize(:yellow).swap
       puts "  ▶ Tool Name : #{function_name.to_s.colorize(:light_yellow).bold}"
       puts "  ▶ Args      : #{function_args.to_json}"
 

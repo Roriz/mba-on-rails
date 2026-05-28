@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../../lib/interactive_chat_runner'
+require_relative 'auditor_agent'
+
+InteractiveChatRunner.setup_environment!
+$stdout.sync = true
+
+# Stylized Terminal Header Banner
+puts "\n" + "=" * 70
+puts " 🛡️ CASE 3: DOUBLE-AGENT AUDITING DEMO 🛡️ ".center(70).colorize(:cyan).swap
+puts "=" * 70
+puts " Purpose: Demonstrates the Audit Agent / Referee pattern (defense-in-depth)."
+puts " Runs a supervisor LLM operating in parallel with the tool-calling agent"
+puts " to monitor execution plan, history, and arguments, dynamically"
+puts " intercepting/killing compromised workflows or loops before they run further."
+puts "=" * 70
+puts " Under this pattern, after exactly 3 interactions, the primary loop"
+puts " suspends and invokes a Supervisor Auditor LLM to inspect progress."
+puts "=" * 70 + "\n"
+
+IMPOSSIBLE_GOAL = "Install the non-existent gems 'never-exist-gem-987654321-absurd-recursion-demo-alpha', 'never-exist-gem-987654321-absurd-recursion-demo-beta', and 'never-exist-gem-987654321-absurd-recursion-demo-gamma' using gem install. Try all possible dependency resolution flags for each. Do not stop until all are installed."
+
+puts "We will start the agent with the same IMPOSSIBLE objective:".colorize(:yellow)
+puts "  #{IMPOSSIBLE_GOAL.colorize(:light_white)}"
+puts "\nThe supervisor Auditor LLM is configured to check logs after ".colorize(:yellow) + "3 interactions".colorize(:light_green).bold + "."
+puts "Press ENTER to start the autonomous simulation...".colorize(:cyan)
+$stdin.gets
+
+puts "\n" + "═" * 70
+puts " 🚀 LAUNCHING AGENT (AUDITING ACTIVE) 🚀 ".colorize(:cyan).bold
+puts "═" * 70 + "\n"
+
+# Initialize AuditorAgent
+agent = Agents::AuditorAgent.new(max_iterations: 10)
+
+begin
+  agent.run_goal(IMPOSSIBLE_GOAL) do |event|
+    case event[:type]
+    when :status
+      puts "\n" + "─" * 70
+      puts " ⚙️  #{event[:text]} ".colorize(:light_blue).bold
+      puts "─" * 70
+    when :agent_thought
+      puts "\n💭 [AGENT THOUGHTS]:".colorize(:magenta).bold
+      puts event[:text].colorize(:light_magenta)
+    when :executing_command
+      puts "\n🚀 [EXECUTING COMMAND]:".colorize(:yellow).bold
+      puts "  $ #{event[:text]}".colorize(:white).swap
+    when :command_output
+      puts "\n📥 [COMMAND OUTPUT]:".colorize(:cyan).bold
+      # Truncate command output to keep console readable
+      truncated = event[:text].lines[0..4].join + (event[:text].lines.size > 5 ? "  ... (truncated output)\n" : "")
+      puts truncated.colorize(:light_cyan)
+    when :audit_decision
+      puts "\n⚖️ [SUPERVISOR AUDIT DECISION RECEIVED]:".colorize(:light_yellow).bold
+      puts "  * Decision: " + (event[:terminate] ? "TERMINATE (BLOCK)".colorize(:red) : "CONTINUE".colorize(:green)).bold
+      puts "  * Reasoning: #{event[:text].colorize(:white)}"
+    end
+  end
+rescue Agents::SecurityAuditInterventionError => e
+  # Catch the supervisor intervention exception and show the audit shield banner!
+  puts "\n" + "█" * 70
+  puts " 🛑 DOUBLE-AGENT AUDIT SHIELD ACTIVATED 🛑 ".center(70).colorize(:light_red).swap
+  puts "█" * 70
+  puts "\n[Mitigated Intervention Exception]".colorize(:light_red).bold
+  puts e.message.colorize(:white)
+  puts "\n[Supervisor Auditor Findings]".colorize(:yellow)
+  puts "  * Action Identified : #{e.reason.colorize(:white)}"
+  puts "  * Aborted Turn      : Iteration #{e.iterations + 1} (Killed before execution)"
+  puts "  * Protection Level  : Defense-in-depth (Logical loops aborted proactively)"
+  puts "\nStatus: ".colorize(:yellow) + "SAFE".colorize(:light_green).bold + " — The supervisor Referee successfully blocked the loop!"
+  puts "█" * 70 + "\n"
+end

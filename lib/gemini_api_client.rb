@@ -51,18 +51,17 @@ class GeminiApiClient
 
     # Print Verbose Developer Request Logs
     puts "\n" + "─" * 60
-    puts " 🚀 [DEVELOPER TRACE] Gemini API Request Initiated ".colorize(:cyan).swap
-    puts "  ▶ Endpoint URL : #{API_URL}"
+    puts " Gemini API Request Initiated ".colorize(:cyan).swap
     puts "  ▶ System Instruction(s) :"
     system_parts.each_with_index do |part, idx|
-      puts "    * [Part #{idx + 1}]: #{part[:text].to_s.colorize(:white)}"
+      puts "    * [Part #{idx + 1}]: #{part[:text].to_s[..50].colorize(:white)}"
     end
     puts "  ▶ Chat History Payload : #{user_prompt.size} turns"
     if tools
       puts "  ▶ Registered Tool schemas :"
       tools.each do |tool|
         tool[:functionDeclarations]&.each do |fn|
-          puts "    * Function '#{fn[:name].to_s.colorize(:light_yellow)}' - Description: #{fn[:description]}"
+          puts "    * Function '#{fn[:name].to_s.colorize(:light_yellow)}'"
         end
       end
     end
@@ -82,9 +81,7 @@ class GeminiApiClient
     text_response = parts.map { |p| p['text'] }.compact.join("\n")
 
     # Print Verbose Developer Response Logs
-    puts " 📥 [DEVELOPER TRACE] Gemini API Response Received ".colorize(:magenta).swap
-    puts "  ▶ HTTP Status Code     : #{response.code}"
-    puts "  ▶ Candidate Text size  : #{text_response.length} chars"
+    puts " Gemini API Response Received ".colorize(:magenta).swap
     if tools
       function_call = parts.find { |p| p.key?('functionCall') }
       if function_call
