@@ -381,27 +381,30 @@ def run_consistency_test(key, runs: 3)
   end
 
   # ─── Unified side-by-side report ───────────────────────────────────────────
-  run_headers = (1..runs).map { |r| "Run #{r}" }
-  run_cols    = run_headers.map { |h| h.rjust(6) }.join(" | ")
-
-  table_width = 110
+  run_headers = (1..runs).map { |r| "Run #{r}".rjust(6) }.join(" | ")
+  
+  # Width calculation:
+  # Candidate (20) + 3 (" | ") + 3 runs (3 * 6 + 2 * 3 = 24) + 3 (" | ") + Range (6) + 3 (" | ") + StdDev (6) = 65 chars for one side
+  # Plus " || " (4) = 134 chars total width
+  table_width = 134
   puts "═" * table_width
   puts " 📊  CONSISTENCY REPORT — #{runs} RUNS  ".center(table_width, "═").colorize(:cyan).swap
   puts "═" * table_width
 
-  # Header
-  puts "\n  #{"Candidate".ljust(20)} | " \
-       "#{run_cols} (Naive) | #{"Range".rjust(6)} | #{"StdDev".rjust(7)} ||" \
-       " #{run_cols} (Jury)  | #{"Range".rjust(6)} | #{"StdDev".rjust(7)}"
-  puts "  " + "─" * (table_width - 2)
+  # Print section headers centered over the column groups
+  puts " " * 22 + " [ NAIVE SCORES ] ".center(44).colorize(:light_red) + " || " + " [ JURY SCORES ] ".center(44).colorize(:light_green)
+  
+  # Print column subheaders
+  puts "  #{"Candidate".ljust(20)} | #{run_headers} | #{"Range".rjust(6)} | #{"StdDev".rjust(7)} || #{run_headers} | #{"Range".rjust(6)} | #{"StdDev".rjust(7)}"
+  puts "  " + "─" * (table_width - 4)
 
   stats.each do |s|
     naive_cells = s[:naive_scores].map { |v| v.to_s.rjust(6) }.join(" | ")
     jury_cells  = s[:jury_scores].map  { |v| v.to_s.rjust(6) }.join(" | ")
 
     puts "  #{s[:name].ljust(20)} | " \
-         "#{naive_cells} | #{s[:naive_range].to_s.rjust(6)} | #{s[:naive_stddev].to_s.rjust(7)} ||" \
-         " #{jury_cells}  | #{s[:jury_range].to_s.rjust(6)} | #{s[:jury_stddev].to_s.rjust(7)}"
+         "#{naive_cells} | #{s[:naive_range].to_s.rjust(6)} | #{s[:naive_stddev].to_s.rjust(7)} || " \
+         "#{jury_cells} | #{s[:jury_range].to_s.rjust(6)} | #{s[:jury_stddev].to_s.rjust(7)}"
   end
 
   # Averages row
@@ -412,10 +415,10 @@ def run_consistency_test(key, runs: 3)
 
   blank_run_cells = Array.new(runs, " " * 6).join(" | ")
 
-  puts "  " + "─" * (table_width - 2)
+  puts "  " + "─" * (table_width - 4)
   puts "  #{"AVG ACROSS ALL".ljust(20)} | " \
-       "#{blank_run_cells} | #{avg_naive_range.to_s.rjust(6)} | #{avg_naive_stddev.to_s.rjust(7)} ||" \
-       " #{blank_run_cells}  | #{avg_jury_range.to_s.rjust(6)} | #{avg_jury_stddev.to_s.rjust(7)}"
+       "#{blank_run_cells} | #{avg_naive_range.to_s.rjust(6)} | #{avg_naive_stddev.to_s.rjust(7)} || " \
+       "#{blank_run_cells} | #{avg_jury_range.to_s.rjust(6)} | #{avg_jury_stddev.to_s.rjust(7)}"
 
   puts "═" * table_width + "\n\n"
 end
